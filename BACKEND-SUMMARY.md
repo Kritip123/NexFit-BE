@@ -1,4 +1,4 @@
-# TrainerHub Backend - Complete Summary
+# NexFit Backend - Complete Summary
 
 ## ✅ Implementation Status
 
@@ -21,7 +21,7 @@
 ## 📁 Project Structure
 
 ```
-TrainerHub/
+NexFit/
 ├── src/main/java/org/example/trainerhub/
 │   ├── config/              # Configuration classes
 │   │   ├── AsyncConfig.java
@@ -163,7 +163,7 @@ TrainerHub/
 
 1. **Clone and navigate to project**
 ```bash
-cd TrainerHub
+cd NexFit
 ```
 
 2. **Create .env file**

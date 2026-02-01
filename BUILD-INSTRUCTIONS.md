@@ -1,4 +1,4 @@
-# TrainerHub Backend - Build Instructions
+# NexFit Backend - Build Instructions
 
 ## ✅ Build and Run Instructions
 
@@ -92,7 +92,7 @@ SERVER_PORT=8081 ./mvnw spring-boot:run
 ./mvnw clean package -DskipTests -P production
 
 # Run JAR file
-java -jar target/TrainerHub-0.0.1-SNAPSHOT.jar
+java -jar target/NexFit-0.0.1-SNAPSHOT.jar
 ```
 
 ## 🐳 Docker Build

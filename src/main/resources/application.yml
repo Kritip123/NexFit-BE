@@ -1,20 +1,20 @@
 spring:
   application:
-    name: TrainerHub
-  
+    name: NexFit-BE
+
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
-  
+
   data:
     mongodb:
-      uri: ${MONGODB_URI:mongodb://localhost:27017/trainerHub}
-      database: trainerHub
+      uri: ${MONGODB_URI:mongodb://localhost:27017/nexfit}
+      database: nexfit
       auto-index-creation: true
-  
+
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ${EMAIL_USERNAME:support@trainerhub.com.au}
+    username: ${EMAIL_USERNAME:support@nexfit.com.au}
     password: ${EMAIL_PASSWORD:}
     properties:
       mail:
@@ -25,12 +25,12 @@ spring:
           connectiontimeout: 5000
           timeout: 5000
           writetimeout: 5000
-  
+
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
-  
+      max-file-size: 100MB
+      max-request-size: 100MB
+
   jackson:
     time-zone: Australia/Sydney
     mapper:
@@ -61,10 +61,23 @@ cors:
 
 app:
   currency: AUD
-  support-email: support@trainerhub.com.au
+  support-email: support@nexfit.com.au
 
 upload:
   path: ${UPLOAD_PATH:./uploads}
+
+# AWS S3 Configuration (disabled by default for demo mode)
+aws:
+  region: ${AWS_REGION:ap-southeast-2}
+  access-key: ${AWS_ACCESS_KEY:}
+  secret-key: ${AWS_SECRET_KEY:}
+  s3:
+    bucket: ${AWS_S3_BUCKET:nexfit-media-dev}
+    enabled: ${AWS_S3_ENABLED:false}
+    presigned-url-expiry: 900  # 15 minutes
+  cloudfront:
+    domain: ${AWS_CLOUDFRONT_DOMAIN:}
+    enabled: ${AWS_CLOUDFRONT_ENABLED:false}
 
 management:
   endpoints:
@@ -86,13 +99,14 @@ management:
 logging:
   level:
     root: ${LOG_LEVEL_ROOT:INFO}
-    org.example.trainerhub: ${LOG_LEVEL_APP:DEBUG}
+    org.example.nexfit: ${LOG_LEVEL_APP:DEBUG}
     org.springframework.data.mongodb.core.MongoTemplate: ${LOG_LEVEL_MONGO:INFO}
+    software.amazon.awssdk: ${LOG_LEVEL_AWS:WARN}
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
   file:
-    name: logs/trainerhub.log
+    name: logs/nexfit.log
     max-size: 10MB
     max-history: 30
 

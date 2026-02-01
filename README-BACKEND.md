@@ -1,8 +1,8 @@
-# TrainerHub Backend - Spring Boot Application
+# NexFit Backend - Spring Boot Application
 
 ## 📋 Overview
 
-TrainerHub is a comprehensive fitness trainer marketplace application built for the Australian market. The backend is built with Spring Boot following MVC architecture with proper design patterns, scalability considerations, and comprehensive API coverage.
+NexFit is a comprehensive fitness trainer marketplace application built for the Australian market. The backend is built with Spring Boot following MVC architecture with proper design patterns, scalability considerations, and comprehensive API coverage.
 
 ## 🚀 Technology Stack
 
@@ -240,7 +240,7 @@ EMAIL_PASSWORD=your_app_specific_password
 1. **Clone the repository**
 ```bash
 git clone <repository-url>
-cd TrainerHub
+cd NexFit
 ```
 
 2. **Start all services**

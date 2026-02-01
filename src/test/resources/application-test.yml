@@ -3,7 +3,7 @@ spring:
     mongodb:
       host: localhost
       port: 27017
-      database: trainerhub_test
+      database: nexfit_test
   
   mail:
     host: localhost
@@ -44,7 +44,7 @@ cors:
 
 app:
   currency: AUD
-  support-email: test@trainerhub.com.au
+  support-email: test@nexfit.com.au
 
 upload:
   path: ./test-uploads
@@ -52,4 +52,4 @@ upload:
 logging:
   level:
     root: WARN
-    org.example.trainerhub: INFO
+    org.example.nexfit: INFO

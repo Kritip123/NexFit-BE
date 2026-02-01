@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🚀 TrainerHub Backend - Quick Start"
+echo "🚀 NexFit Backend - Quick Start"
 echo "===================================="
 echo ""
 

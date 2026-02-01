@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>org.example</groupId>
-    <artifactId>TrainerHub</artifactId>
+    <artifactId>nexfit-be</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>TrainerHub</name>
-    <description>TrainerHub</description>
+    <name>NexFit-BE</name>
+    <description>NexFit Backend - Fitness Trainer Platform</description>
     <url/>
     <licenses>
         <license/>
@@ -101,6 +101,18 @@
             <artifactId>commons-lang3</artifactId>
         </dependency>
         
+        <!-- AWS S3 SDK -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+            <version>2.25.0</version>
+        </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>sts</artifactId>
+            <version>2.25.0</version>
+        </dependency>
+
         <!-- Testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
