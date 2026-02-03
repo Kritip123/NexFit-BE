@@ -23,6 +23,8 @@ public class ConfirmUploadRequest {
     private String title;
     private String description;
 
+    private String thumbnailUrl;
+
     // For transformations
     private String beforeImageUrl;
     private String afterImageUrl;
@@ -33,4 +35,6 @@ public class ConfirmUploadRequest {
     private Integer durationSeconds;
     private Integer width;
     private Integer height;
+
+    private Integer displayOrder;
 }

@@ -63,6 +63,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         Map<String, Object> extraClaims = new HashMap<>();
         extraClaims.put("userId", user.getId());
         extraClaims.put("role", user.getRole().name());
+        extraClaims.put("tokenType", "user");
         
         String jwtToken = jwtService.generateToken(extraClaims, user);
         String refreshToken = jwtService.generateRefreshToken(user);
@@ -100,6 +101,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         Map<String, Object> extraClaims = new HashMap<>();
         extraClaims.put("userId", user.getId());
         extraClaims.put("role", user.getRole().name());
+        extraClaims.put("tokenType", "user");
         
         String jwtToken = jwtService.generateToken(extraClaims, user);
         String refreshToken = jwtService.generateRefreshToken(user);
@@ -130,6 +132,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         Map<String, Object> extraClaims = new HashMap<>();
         extraClaims.put("userId", user.getId());
         extraClaims.put("role", user.getRole().name());
+        extraClaims.put("tokenType", "user");
         
         String newJwtToken = jwtService.generateToken(extraClaims, user);
         

@@ -13,6 +13,7 @@ import org.example.nexfit.repository.SavedTrainerRepository;
 import org.example.nexfit.repository.TrainerRepository;
 import org.example.nexfit.service.ComparisonService;
 import org.example.nexfit.service.TrainerInteractionService;
+import org.example.nexfit.service.TrainerVisibilityService;
 import org.example.nexfit.util.DistanceCalculator;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +28,7 @@ public class ComparisonServiceImpl implements ComparisonService {
     private final SavedTrainerRepository savedTrainerRepository;
     private final TrainerRepository trainerRepository;
     private final TrainerInteractionService interactionService;
+    private final TrainerVisibilityService visibilityService;
 
     private static final int MIN_RECONSIDERATION_SCORE = 80;
     private static final int RECENT_VIEWS_HOURS = 48;
@@ -52,6 +54,7 @@ public class ComparisonServiceImpl implements ComparisonService {
 
         // Get trainers data
         Map<String, Trainer> trainerMap = trainerRepository.findAllById(savedTrainerIds).stream()
+                .filter(visibilityService::isVisibleToUsers)
                 .collect(Collectors.toMap(Trainer::getId, t -> t));
 
         // Build saved cards
@@ -83,7 +86,7 @@ public class ComparisonServiceImpl implements ComparisonService {
                 ));
 
         Map<String, Trainer> reconsiderationTrainerMap = trainerRepository.findAllById(reconsiderationIds).stream()
-                .filter(Trainer::getIsActive)
+                .filter(visibilityService::isVisibleToUsers)
                 .collect(Collectors.toMap(Trainer::getId, t -> t));
 
         List<TrainerComparisonCard> reconsiderationCards = reconsiderationIds.stream()
@@ -121,7 +124,7 @@ public class ComparisonServiceImpl implements ComparisonService {
                 ));
 
         Map<String, Trainer> viewedTrainerMap = trainerRepository.findAllById(viewedIds).stream()
-                .filter(Trainer::getIsActive)
+                .filter(visibilityService::isVisibleToUsers)
                 .collect(Collectors.toMap(Trainer::getId, t -> t));
 
         List<TrainerComparisonCard> viewedCards = viewedIds.stream()

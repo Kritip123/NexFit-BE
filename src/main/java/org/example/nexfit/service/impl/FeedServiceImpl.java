@@ -16,6 +16,7 @@ import org.example.nexfit.repository.TrainerRepository;
 import org.example.nexfit.repository.UserRepository;
 import org.example.nexfit.service.FeedService;
 import org.example.nexfit.service.TrainerInteractionService;
+import org.example.nexfit.service.TrainerVisibilityService;
 import org.example.nexfit.util.DistanceCalculator;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +32,7 @@ public class FeedServiceImpl implements FeedService {
     private final UserRepository userRepository;
     private final TrainerMediaRepository mediaRepository;
     private final TrainerInteractionService interactionService;
+    private final TrainerVisibilityService visibilityService;
 
     private static final int RECENCY_FILTER_HOURS = 24;
     private static final double EXPLORATION_MIX_RATIO = 0.1; // 10% exploration
@@ -66,7 +68,7 @@ public class FeedServiceImpl implements FeedService {
 
         // Get all active trainers
         List<Trainer> allTrainers = trainerRepository.findAll().stream()
-                .filter(Trainer::getIsActive)
+                .filter(visibilityService::isVisibleToUsers)
                 .filter(t -> !excludedTrainerIds.contains(t.getId()))
                 .toList();
 

@@ -10,4 +10,6 @@ import java.util.Optional;
 public interface TrainerRepository extends MongoRepository<Trainer, String> {
     
     Optional<Trainer> findByEmail(String email);
+
+    boolean existsByEmail(String email);
 }

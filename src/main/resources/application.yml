@@ -3,12 +3,12 @@ spring:
     name: NexFit-BE
 
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:default}
+    active: ${SPRING_PROFILES_ACTIVE:local}
 
   data:
     mongodb:
-      uri: "mongodb://nexfit-admin:newPassw0rd@ac-m1hrvkw-shard-00-00.voszrn1.mongodb.net:27017,ac-m1hrvkw-shard-00-01.voszrn1.mongodb.net:27017,ac-m1hrvkw-shard-00-02.voszrn1.mongodb.net:27017/nexfit?ssl=true&authSource=admin&retryWrites=true&w=majority"
-      database: nexfit
+      uri: ${MONGODB_URI:mongodb://localhost:27017/nexfit}
+      database: ${MONGODB_DATABASE:nexfit}
       auto-index-creation: true
 
   mail:
@@ -62,6 +62,11 @@ cors:
 app:
   currency: AUD
   support-email: support@nexfit.com.au
+
+launchdarkly:
+  enabled: ${LAUNCHDARKLY_ENABLED:false}
+  sdk-key: ${LAUNCHDARKLY_SDK_KEY:}
+  flag-key: ${LAUNCHDARKLY_FLAG_KEY:verified-trainers}
 
 upload:
   path: ${UPLOAD_PATH:./uploads}

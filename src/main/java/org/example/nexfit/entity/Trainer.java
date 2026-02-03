@@ -1,25 +1,27 @@
 package org.example.nexfit.entity;
 
 import lombok.*;
+import org.example.nexfit.entity.enums.TrainerStatus;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Document(collection = "trainers")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Trainer {
+@ToString(exclude = "password")
+public class Trainer implements UserDetails {
     
     @Id
     private String id;
@@ -29,6 +31,8 @@ public class Trainer {
     @Indexed(unique = true)
     private String email;
     
+    private String password;
+    
     private String phone;
 
     private User.Gender gender;
@@ -36,11 +40,16 @@ public class Trainer {
     private String profileImage;
     
     private String coverImage;
+
+    private String headline;
     
     @Builder.Default
     private Set<String> specializations = new HashSet<>();
     
     private Integer experience; // in years
+
+    @Builder.Default
+    private TrainerStatus status = TrainerStatus.DRAFT;
     
     @Builder.Default
     private BigDecimal rating = BigDecimal.ZERO;
@@ -49,6 +58,9 @@ public class Trainer {
     private Integer reviewCount = 0;
     
     private BigDecimal hourlyRate;
+
+    @Builder.Default
+    private BigDecimal pricingMonthlySubscriptionUsd = BigDecimal.ONE;
     
     private String bio;
     
@@ -105,12 +117,52 @@ public class Trainer {
     
     @Builder.Default
     private Boolean isVerified = false;
+
+    @Builder.Default
+    private Boolean hasDiscoverVideo = false;
+
+    @Builder.Default
+    private Boolean profileInitialized = false;
+
+    private LocalDateTime submittedAt;
+
+    private LocalDateTime approvedAt;
     
     @CreatedDate
     private LocalDateTime createdAt;
     
     @LastModifiedDate
     private LocalDateTime updatedAt;
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority("ROLE_TRAINER"));
+    }
+
+    @Override
+    public String getUsername() {
+        return email;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return Boolean.TRUE.equals(isActive);
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return Boolean.TRUE.equals(isActive);
+    }
 
     @Data
     @Builder

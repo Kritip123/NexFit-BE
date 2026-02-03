@@ -17,6 +17,7 @@ import org.example.nexfit.repository.UserRepository;
 import org.example.nexfit.repository.TrainerAvailabilityRepository;
 import org.example.nexfit.repository.TrainerRepository;
 import org.example.nexfit.service.TrainerService;
+import org.example.nexfit.service.TrainerVisibilityService;
 import org.example.nexfit.util.DistanceCalculator;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -37,13 +38,14 @@ public class TrainerServiceImpl implements TrainerService {
     private final TrainerAvailabilityRepository availabilityRepository;
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
+    private final TrainerVisibilityService visibilityService;
     
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("h:mm a");
     
     @Override
     public PageResponse<TrainerDTO> searchTrainers(TrainerSearchRequest request, Pageable pageable) {
         List<Trainer> trainers = trainerRepository.findAll().stream()
-                .filter(Trainer::getIsActive)
+                .filter(visibilityService::isVisibleToUsers)
                 .toList();
 
         trainers = applySearchFilters(trainers, request);
@@ -64,7 +66,7 @@ public class TrainerServiceImpl implements TrainerService {
         Trainer trainer = trainerRepository.findById(trainerId)
             .orElseThrow(() -> new ResourceNotFoundException("Trainer", trainerId));
         
-        if (!trainer.getIsActive()) {
+        if (!visibilityService.isVisibleToUsers(trainer)) {
             throw new ResourceNotFoundException("Trainer not found or inactive");
         }
         
@@ -124,7 +126,7 @@ public class TrainerServiceImpl implements TrainerService {
     @Override
     public PageResponse<MatchedTrainerResponse> getMatchedTrainers(TrainerMatchRequest request, Pageable pageable) {
         List<Trainer> trainers = trainerRepository.findAll().stream()
-                .filter(Trainer::getIsActive)
+                .filter(visibilityService::isVisibleToUsers)
                 .toList();
 
         List<MatchedTrainerResponse> matches = trainers.stream()
@@ -139,6 +141,9 @@ public class TrainerServiceImpl implements TrainerService {
     public TrainerPortfolioResponse getTrainerPortfolio(String trainerId) {
         Trainer trainer = trainerRepository.findById(trainerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Trainer", trainerId));
+        if (!visibilityService.isVisibleToUsers(trainer)) {
+            throw new ResourceNotFoundException("Trainer not found or inactive");
+        }
 
         var reviews = reviewRepository.findByTrainerId(trainerId).stream()
                 .map(review -> {

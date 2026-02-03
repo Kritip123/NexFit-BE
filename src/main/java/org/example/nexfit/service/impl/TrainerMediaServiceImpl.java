@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.nexfit.entity.TrainerMedia;
 import org.example.nexfit.exception.BusinessException;
 import org.example.nexfit.exception.ResourceNotFoundException;
+import org.example.nexfit.repository.TrainerRepository;
 import org.example.nexfit.model.request.ConfirmUploadRequest;
 import org.example.nexfit.model.request.UploadUrlRequest;
 import org.example.nexfit.model.response.UploadUrlResponse;
@@ -24,6 +25,7 @@ public class TrainerMediaServiceImpl implements TrainerMediaService {
 
     private final TrainerMediaRepository mediaRepository;
     private final S3Service s3Service;
+    private final TrainerRepository trainerRepository;
 
     @Override
     public List<TrainerMedia> getTrainerMedia(String trainerId) {
@@ -38,18 +40,12 @@ public class TrainerMediaServiceImpl implements TrainerMediaService {
 
         // Generate S3 key
         String extension = getExtension(request.getFilename());
-        String folder = switch (request.getMediaType()) {
-            case VIDEO -> "videos";
-            case IMAGE -> "images";
-            case TRANSFORMATION -> "transformations";
-        };
-
-        String s3Key = String.format("trainers/%s/%s/%s%s",
+        String folder = request.getMediaType().name().toLowerCase();
+        String s3Key = String.format("trainers/%s/media/%s/%s%s",
                 trainerId,
                 folder,
-                UUID.randomUUID().toString(),
-                extension
-        );
+                UUID.randomUUID(),
+                extension);
 
         return s3Service.generatePresignedUploadUrl(s3Key, request.getContentType());
     }
@@ -61,6 +57,15 @@ public class TrainerMediaServiceImpl implements TrainerMediaService {
             throw new BusinessException("Upload not found. Please upload the file first.");
         }
 
+        if (request.getMediaType() == org.example.nexfit.entity.enums.MediaType.VIDEO) {
+            if (request.getDurationSeconds() == null) {
+                throw new BusinessException("Video duration is required");
+            }
+            if (request.getDurationSeconds() < 10 || request.getDurationSeconds() > 15) {
+                throw new BusinessException("Video duration must be between 10 and 15 seconds");
+            }
+        }
+
         // Get the media URL
         String mediaUrl = s3Service.isEnabled()
                 ? s3Service.getMediaUrl(request.getS3Key())
@@ -68,14 +73,17 @@ public class TrainerMediaServiceImpl implements TrainerMediaService {
 
         // Get current max display order
         long count = mediaRepository.countByTrainerId(trainerId);
+        int displayOrder = request.getDisplayOrder() != null ? request.getDisplayOrder() : (int) count;
 
         TrainerMedia media = TrainerMedia.builder()
                 .trainerId(trainerId)
                 .type(request.getMediaType())
                 .s3Key(request.getS3Key())
                 .mediaUrl(mediaUrl)
-                .thumbnailUrl(request.getMediaType() == org.example.nexfit.entity.enums.MediaType.VIDEO
-                        ? generateThumbnailUrl(mediaUrl) : mediaUrl)
+                .thumbnailUrl(request.getThumbnailUrl() != null
+                        ? request.getThumbnailUrl()
+                        : (request.getMediaType() == org.example.nexfit.entity.enums.MediaType.VIDEO
+                            ? generateThumbnailUrl(mediaUrl) : mediaUrl))
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .beforeImageUrl(request.getBeforeImageUrl())
@@ -85,12 +93,14 @@ public class TrainerMediaServiceImpl implements TrainerMediaService {
                 .durationSeconds(request.getDurationSeconds())
                 .width(request.getWidth())
                 .height(request.getHeight())
-                .displayOrder((int) count)
+                .displayOrder(displayOrder)
                 .isDemo(false)
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        return mediaRepository.save(media);
+        TrainerMedia saved = mediaRepository.save(media);
+        updateDiscoverVideoFlag(trainerId);
+        return saved;
     }
 
     @Override
@@ -108,6 +118,7 @@ public class TrainerMediaServiceImpl implements TrainerMediaService {
         }
 
         mediaRepository.delete(media);
+        updateDiscoverVideoFlag(trainerId);
         log.info("Deleted media: {} for trainer: {}", mediaId, trainerId);
     }
 
@@ -127,5 +138,20 @@ public class TrainerMediaServiceImpl implements TrainerMediaService {
         // For demo purposes, we'll just use the video URL as thumbnail
         // In production, you'd generate an actual thumbnail
         return videoUrl;
+    }
+
+    private void updateDiscoverVideoFlag(String trainerId) {
+        trainerRepository.findById(trainerId).ifPresent(trainer -> {
+            boolean hasDiscoverVideo = mediaRepository.findByTrainerIdAndTypeOrderByDisplayOrderAsc(
+                            trainerId,
+                            org.example.nexfit.entity.enums.MediaType.VIDEO
+                    ).stream()
+                    .anyMatch(media -> media.getDurationSeconds() != null
+                            && media.getDurationSeconds() >= 10
+                            && media.getDurationSeconds() <= 15);
+
+            trainer.setHasDiscoverVideo(hasDiscoverVideo);
+            trainerRepository.save(trainer);
+        });
     }
 }

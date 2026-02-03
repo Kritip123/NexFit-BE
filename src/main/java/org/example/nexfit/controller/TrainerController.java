@@ -130,6 +130,7 @@ public class TrainerController {
     @GetMapping("/{id}/media")
     @Operation(summary = "Get trainer media (videos, images, transformations)")
     public ResponseEntity<List<TrainerMedia>> getTrainerMedia(@PathVariable String id) {
+        trainerService.getTrainerById(id);
         return ResponseEntity.ok(mediaService.getTrainerMedia(id));
     }
 
@@ -167,6 +168,7 @@ public class TrainerController {
             @PathVariable String id,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
     ) {
+        trainerService.getTrainerById(id);
         if (date == null) {
             date = LocalDate.now();
         }
@@ -194,6 +196,7 @@ public class TrainerController {
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(defaultValue = "recent") String sortBy
     ) {
+        trainerService.getTrainerById(id);
         return ResponseEntity.ok(reviewService.getTrainerReviews(id, PageRequest.of(page, limit)));
     }
 

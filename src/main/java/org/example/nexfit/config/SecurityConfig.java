@@ -2,7 +2,9 @@ package org.example.nexfit.config;
 
 import lombok.RequiredArgsConstructor;
 import org.example.nexfit.security.JwtAuthenticationFilter;
+import org.example.nexfit.security.TrainerJwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -32,6 +34,9 @@ import java.util.List;
 public class SecurityConfig {
     
     private final JwtAuthenticationFilter jwtAuthFilter;
+    private final TrainerJwtAuthenticationFilter trainerJwtAuthFilter;
+
+    @Qualifier("userDetailsService")
     private final UserDetailsService userDetailsService;
     
     @Value("${cors.allowed.origins}")
@@ -54,6 +59,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/auth/**",
+                                "/trainer/auth/**",
                                 "/config/**",
                                 "/trainers/**",
                                 "/reviews/trainer/**",
@@ -70,6 +76,7 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authenticationProvider(authenticationProvider())
+                .addFilterBefore(trainerJwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         
         return http.build();

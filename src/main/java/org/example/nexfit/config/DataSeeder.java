@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.nexfit.entity.*;
 import org.example.nexfit.entity.enums.MediaType;
+import org.example.nexfit.entity.enums.TrainerStatus;
 import org.example.nexfit.repository.*;
 import org.example.nexfit.service.S3Service;
 import org.springframework.beans.factory.annotation.Value;
@@ -277,7 +278,7 @@ public class DataSeeder implements CommandLineRunner {
                         .thumbnailUrl(DEMO_THUMBNAIL_URLS.get(v % DEMO_THUMBNAIL_URLS.size()))
                         .title(videoTitles.get(Math.abs((trainer.hashCode() + v) % videoTitles.size())))
                         .description("Professional training session demonstrating proper form and technique")
-                        .durationSeconds(30 + random.nextInt(90))
+                        .durationSeconds(10 + random.nextInt(6))
                         .displayOrder(v)
                         .likes(10 + random.nextInt(200))
                         .isDemo(!isS3Video)
@@ -485,15 +486,18 @@ public class DataSeeder implements CommandLineRunner {
             Trainer trainer = Trainer.builder()
                     .name(first + " " + last)
                     .email(email)
+                    .password(passwordEncoder.encode("Password@123"))
                     .phone(phone)
                     .gender(randomEnum(User.Gender.class))
                     .profileImage("https://images.pexels.com/photos/" + getRandomFitnessPhotoId(i + 50) + "/pexels-photo-" + getRandomFitnessPhotoId(i + 50) + ".jpeg?auto=compress&cs=tinysrgb&w=400")
                     .coverImage("https://images.pexels.com/photos/" + getRandomFitnessPhotoId(i + 100) + "/pexels-photo-" + getRandomFitnessPhotoId(i + 100) + ".jpeg?auto=compress&cs=tinysrgb&w=1000")
+                    .headline("Certified Fitness Coach")
                     .specializations(Set.copyOf(pickRandomList(specializations, 2, 4)))
                     .experience(experience)
                     .rating(BigDecimal.valueOf(3.5 + random.nextDouble() * 1.5).setScale(2, RoundingMode.HALF_UP))
                     .reviewCount(0)
                     .hourlyRate(BigDecimal.valueOf(60 + random.nextInt(90)))
+                    .pricingMonthlySubscriptionUsd(BigDecimal.ONE)
                     .bio(bios.get(i % bios.size()))
                     .certifications(pickRandomList(certifications, 2, 3))
                     .instagramId(instagramId)
@@ -518,6 +522,11 @@ public class DataSeeder implements CommandLineRunner {
                     .contactMethods(contactMethods)
                     .isActive(true)
                     .isVerified(random.nextBoolean())
+                    .status(TrainerStatus.APPROVED)
+                    .hasDiscoverVideo(true)
+                    .profileInitialized(true)
+                    .submittedAt(LocalDateTime.now().minusDays(random.nextInt(10)))
+                    .approvedAt(LocalDateTime.now().minusDays(random.nextInt(5)))
                     .build();
 
             trainers.add(trainer);

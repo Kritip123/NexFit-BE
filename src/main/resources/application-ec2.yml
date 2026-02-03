@@ -1,0 +1,5 @@
+spring:
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://nexfit-admin:newPassw0rd@ac-m1hrvkw-shard-00-00.voszrn1.mongodb.net:27017,ac-m1hrvkw-shard-00-01.voszrn1.mongodb.net:27017,ac-m1hrvkw-shard-00-02.voszrn1.mongodb.net:27017/nexfit?ssl=true&authSource=admin&retryWrites=true&w=majority}
+      database: ${MONGODB_DATABASE:nexfit}
