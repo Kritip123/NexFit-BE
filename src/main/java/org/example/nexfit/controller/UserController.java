@@ -51,8 +51,10 @@ public class UserController {
     @Operation(summary = "Upload profile avatar")
     public ResponseEntity<Map<String, String>> uploadAvatar(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestParam("file") MultipartFile file
+            @RequestParam(value = "avatar", required = false) MultipartFile avatarFile,
+            @RequestParam(value = "file", required = false) MultipartFile fallbackFile
     ) {
+        MultipartFile file = avatarFile != null ? avatarFile : fallbackFile;
         String userEmail = userDetails.getUsername();
         String avatarUrl = userService.uploadAvatar(userEmail, file);
         return ResponseEntity.ok(Map.of("avatar", avatarUrl, "message", "Avatar uploaded successfully"));

@@ -62,12 +62,15 @@ public class TrainerProfileServiceImpl implements TrainerProfileService {
     @Override
     public TrainerProfileResponse updateProfile(String trainerId, TrainerProfileUpdateRequest request) {
         Trainer trainer = getTrainerOrThrow(trainerId);
-        if (trainer.getStatus() != TrainerStatus.DRAFT) {
-            throw new BusinessException("Trainer profile is locked and cannot be edited");
-        }
 
         TrainerProfileUpdateRequest.Profile profile = request.getProfile();
         if (profile != null) {
+            if (profile.getProfileImage() != null) {
+                trainer.setProfileImage(profile.getProfileImage());
+            }
+            if (profile.getCoverImage() != null) {
+                trainer.setCoverImage(profile.getCoverImage());
+            }
             if (profile.getFullName() != null) {
                 trainer.setName(profile.getFullName());
             }
@@ -89,25 +92,15 @@ public class TrainerProfileServiceImpl implements TrainerProfileService {
             if (profile.getBio() != null) {
                 trainer.setBio(profile.getBio());
             }
-            if (profile.getProfileImage() != null) {
-                trainer.setProfileImage(profile.getProfileImage());
-            }
-            if (profile.getCoverImage() != null) {
-                trainer.setCoverImage(profile.getCoverImage());
-            }
             if (profile.getSpecializations() != null) {
-                trainer.setSpecializations(profile.getSpecializations() != null
-                        ? new HashSet<>(profile.getSpecializations())
-                        : Set.of());
+                trainer.setSpecializations(new HashSet<>(profile.getSpecializations()));
             }
             if (profile.getYearsActive() != null) {
                 trainer.setYearsActive(profile.getYearsActive());
                 trainer.setExperience(profile.getYearsActive());
             }
             if (profile.getLanguages() != null) {
-                trainer.setLanguages(profile.getLanguages() != null
-                        ? new HashSet<>(profile.getLanguages())
-                        : Set.of());
+                trainer.setLanguages(new HashSet<>(profile.getLanguages()));
             }
             if (profile.getPricing() != null && profile.getPricing().getMonthlySubscriptionUSD() != null) {
                 if (!Objects.equals(profile.getPricing().getMonthlySubscriptionUSD(), REQUIRED_PRICE_USD)) {
@@ -128,8 +121,7 @@ public class TrainerProfileServiceImpl implements TrainerProfileService {
             throw new BusinessException("Trainer profile cannot be submitted");
         }
 
-        long certificateCount = certificateRepository.countByTrainerId(trainerId);
-        validateSubmission(trainer, certificateCount);
+        validateSubmission(trainer);
 
         trainer.setStatus(TrainerStatus.SUBMITTED);
         trainer.setSubmittedAt(LocalDateTime.now());
@@ -153,10 +145,7 @@ public class TrainerProfileServiceImpl implements TrainerProfileService {
         trainer.setCity(city);
     }
 
-    private void validateSubmission(Trainer trainer, long certificateCount) {
-        if (certificateCount < 1) {
-            throw new BusinessException("At least one certificate is required to submit");
-        }
+    private void validateSubmission(Trainer trainer) {
         if (isBlank(trainer.getName()) ||
                 isBlank(trainer.getEmail()) ||
                 isBlank(trainer.getPhone()) ||

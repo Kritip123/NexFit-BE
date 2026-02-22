@@ -21,9 +21,6 @@ public class TrainerVisibilityServiceImpl implements TrainerVisibilityService {
         if (!Boolean.TRUE.equals(trainer.getIsActive())) {
             return false;
         }
-        if (!Boolean.TRUE.equals(trainer.getHasDiscoverVideo())) {
-            return false;
-        }
         return launchDarklyService.isTrainerVerified(trainer.getEmail());
     }
 }

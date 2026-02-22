@@ -61,7 +61,8 @@ public class LaunchDarklyServiceImpl implements LaunchDarklyService {
     @Override
     public boolean isTrainerVerified(String trainerEmail) {
         if (!enabled || ldClient == null) {
-            return false;
+            log.debug("LaunchDarkly disabled — treating all trainers as verified");
+            return true;
         }
         if (trainerEmail == null || trainerEmail.isBlank()) {
             log.warn("LaunchDarkly evaluation skipped: trainer email is missing");

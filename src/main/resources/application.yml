@@ -95,10 +95,14 @@ management:
       base-path: /actuator
   endpoint:
     health:
-      show-details: always
+      show-details: never
       enabled: true
   health:
+    defaults:
+      enabled: false
     mail:
+      enabled: false
+    mongo:
       enabled: false
   metrics:
     tags:

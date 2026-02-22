@@ -86,19 +86,18 @@ public class FeedServiceImpl implements FeedService {
         int explorationCount = (int) (request.getSize() * EXPLORATION_MIX_RATIO);
         List<ScoredTrainer> finalList = addExplorationMix(scoredTrainers, explorationCount, seededRandom);
 
-        // Build round-robin video feed list (one video per trainer per cycle)
+        // Build round-robin feed list (videos + images, one media item per trainer per cycle)
         List<String> trainerIds = finalList.stream().map(st -> st.trainer.getId()).toList();
         Map<String, List<TrainerMedia>> mediaMap = mediaRepository.findByTrainerIdInOrderByDisplayOrderAsc(trainerIds)
                 .stream().collect(Collectors.groupingBy(TrainerMedia::getTrainerId));
 
-        Map<String, List<TrainerMedia>> videoMap = new LinkedHashMap<>();
+        Map<String, List<TrainerMedia>> allMediaMap = new LinkedHashMap<>();
         for (ScoredTrainer scored : finalList) {
-            List<TrainerMedia> videos = mediaMap.getOrDefault(scored.trainer.getId(), List.of()).stream()
-                    .filter(media -> media.getType() == MediaType.VIDEO)
-                    .sorted(videoComparator())
+            List<TrainerMedia> allMedia = mediaMap.getOrDefault(scored.trainer.getId(), List.of()).stream()
+                    .sorted(mediaComparator())
                     .collect(Collectors.toCollection(ArrayList::new));
-            if (!videos.isEmpty()) {
-                videoMap.put(scored.trainer.getId(), videos);
+            if (!allMedia.isEmpty()) {
+                allMediaMap.put(scored.trainer.getId(), allMedia);
             }
         }
 
@@ -107,14 +106,25 @@ public class FeedServiceImpl implements FeedService {
         do {
             added = false;
             for (ScoredTrainer scored : finalList) {
-                List<TrainerMedia> videos = videoMap.get(scored.trainer.getId());
-                if (videos != null && !videos.isEmpty()) {
-                    TrainerMedia nextVideo = videos.remove(0);
-                    roundRobin.add(new ScoredTrainerVideo(scored.trainer, scored.score, nextVideo));
+                List<TrainerMedia> mediaItems = allMediaMap.get(scored.trainer.getId());
+                if (mediaItems != null && !mediaItems.isEmpty()) {
+                    TrainerMedia nextMedia = mediaItems.remove(0);
+                    roundRobin.add(new ScoredTrainerVideo(scored.trainer, scored.score, nextMedia));
                     added = true;
                 }
             }
         } while (added);
+
+        // Also include trainers who have gallery images but no TrainerMedia records
+        Set<String> trainersWithMedia = allMediaMap.keySet();
+        for (ScoredTrainer scored : finalList) {
+            if (!trainersWithMedia.contains(scored.trainer.getId())) {
+                List<Trainer.TrainerImage> gallery = scored.trainer.getGallery();
+                if (gallery != null && !gallery.isEmpty()) {
+                    roundRobin.add(new ScoredTrainerVideo(scored.trainer, scored.score, null));
+                }
+            }
+        }
 
         // Pagination
         int totalCount = roundRobin.size();
@@ -141,7 +151,9 @@ public class FeedServiceImpl implements FeedService {
         Double finalUserLat = userLat;
         Double finalUserLng = userLng;
         List<TrainerFeedCard> feedCards = pageVideos.stream()
-                .map(stv -> convertToFeedCard(stv.trainer, stv.score, List.of(stv.media), finalUserLat, finalUserLng))
+                .map(stv -> convertToFeedCard(stv.trainer, stv.score,
+                        stv.media != null ? List.of(stv.media) : List.of(),
+                        finalUserLat, finalUserLng))
                 .toList();
 
         // Log first trainer for debugging
@@ -348,6 +360,14 @@ public class FeedServiceImpl implements FeedService {
             distance = DistanceCalculator.calculateDistance(userLat, userLng, trainer.getLatitude(), trainer.getLongitude());
         }
 
+        // Collect gallery image URLs
+        List<String> galleryUrls = trainer.getGallery() != null
+                ? trainer.getGallery().stream()
+                    .map(Trainer.TrainerImage::getUrl)
+                    .filter(url -> url != null && !url.isBlank())
+                    .toList()
+                : List.of();
+
         return TrainerFeedCard.builder()
                 .id(trainer.getId())
                 .name(trainer.getName())
@@ -355,6 +375,7 @@ public class FeedServiceImpl implements FeedService {
                 .bio(trainer.getBio())
                 .featuredVideo(featuredVideo)
                 .media(mediaInfos)
+                .gallery(galleryUrls)
                 .specializations(trainer.getSpecializations())
                 .rating(trainer.getRating())
                 .reviewCount(trainer.getReviewCount())
@@ -371,9 +392,10 @@ public class FeedServiceImpl implements FeedService {
 
     private record ScoredTrainerVideo(Trainer trainer, int score, TrainerMedia media) {}
 
-    private Comparator<TrainerMedia> videoComparator() {
+    private Comparator<TrainerMedia> mediaComparator() {
         return Comparator
-                .comparing((TrainerMedia media) -> Boolean.TRUE.equals(media.getIsFeatured()) ? 0 : 1)
+                .comparing((TrainerMedia media) -> media.getType() == MediaType.VIDEO ? 0 : 1)
+                .thenComparing(media -> Boolean.TRUE.equals(media.getIsFeatured()) ? 0 : 1)
                 .thenComparing(media -> media.getDisplayOrder() != null ? media.getDisplayOrder() : Integer.MAX_VALUE);
     }
 }

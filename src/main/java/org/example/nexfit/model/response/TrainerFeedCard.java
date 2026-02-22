@@ -23,6 +23,7 @@ public class TrainerFeedCard {
 
     private MediaInfo featuredVideo; // Primary video for reel display
     private List<MediaInfo> media;
+    private List<String> gallery; // Gallery image URLs for photo-only mode
     private Set<String> specializations;
 
     private BigDecimal rating;
