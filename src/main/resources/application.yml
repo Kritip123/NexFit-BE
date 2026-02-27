@@ -46,7 +46,7 @@ server:
     min-response-size: 1024
 
 jwt:
-  secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+  secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION:86400000}  # 24 hours
   refresh:
     expiration: ${JWT_REFRESH_EXPIRATION:604800000}  # 7 days
@@ -75,8 +75,8 @@ media:
 # AWS S3 Configuration
 aws:
   region: ap-southeast-2
-  access-key: ${AWS_ACCESS_KEY:AKIARWXCVXXRFLLSXABA}
-  secret-key: ${AWS_SECRET_KEY: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}
+  access-key: ${AWS_ACCESS_KEY:}
+  secret-key: ${AWS_SECRET_KEY:}
   s3:
     bucket: nexfit-media-prod
     enabled: true

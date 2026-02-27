@@ -36,3 +36,9 @@ build/
 .env
 application-local.yml
 src/main/resources/application-local.yml
+
+### OS ###
+.DS_Store
+
+### Logs ###
+logs/

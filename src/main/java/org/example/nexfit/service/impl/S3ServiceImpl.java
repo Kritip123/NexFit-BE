@@ -7,6 +7,8 @@ import org.example.nexfit.service.S3Service;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
@@ -69,19 +71,16 @@ public class S3ServiceImpl implements S3Service {
             log.info("S3 service is disabled.");
             return;
         }
-        if (accessKey.isEmpty() || secretKey.isEmpty()) {
-            String message = "Missing AWS credentials for S3. Check AWS_ACCESS_KEY and AWS_SECRET_KEY.";
-            if (required) {
-                throw new IllegalStateException(message);
-            }
-            log.error(message);
-            enabled = false;
-            return;
-        }
-
         try {
-            AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKey, secretKey);
-            StaticCredentialsProvider credentialsProvider = StaticCredentialsProvider.create(credentials);
+            AwsCredentialsProvider credentialsProvider;
+            if (!accessKey.isEmpty() && !secretKey.isEmpty()) {
+                log.info("Using static AWS credentials for S3");
+                credentialsProvider = StaticCredentialsProvider.create(
+                        AwsBasicCredentials.create(accessKey, secretKey));
+            } else {
+                log.info("Using default AWS credential chain (IAM role) for S3");
+                credentialsProvider = DefaultCredentialsProvider.create();
+            }
 
             this.s3Client = S3Client.builder()
                     .region(Region.of(region))

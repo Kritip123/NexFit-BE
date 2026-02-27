@@ -91,6 +91,8 @@ public class FeedServiceImpl implements FeedService {
         Map<String, List<TrainerMedia>> mediaMap = mediaRepository.findByTrainerIdInOrderByDisplayOrderAsc(trainerIds)
                 .stream().collect(Collectors.groupingBy(TrainerMedia::getTrainerId));
 
+        // Keep a full copy of image media per trainer (for gallery in feed cards)
+        Map<String, List<TrainerMedia>> fullImageMediaMap = new LinkedHashMap<>();
         Map<String, List<TrainerMedia>> allMediaMap = new LinkedHashMap<>();
         for (ScoredTrainer scored : finalList) {
             List<TrainerMedia> allMedia = mediaMap.getOrDefault(scored.trainer.getId(), List.of()).stream()
@@ -98,6 +100,14 @@ public class FeedServiceImpl implements FeedService {
                     .collect(Collectors.toCollection(ArrayList::new));
             if (!allMedia.isEmpty()) {
                 allMediaMap.put(scored.trainer.getId(), allMedia);
+            }
+            // Collect all image media sorted newest first for gallery
+            List<TrainerMedia> imageMedia = mediaMap.getOrDefault(scored.trainer.getId(), List.of()).stream()
+                    .filter(m -> m.getType() == MediaType.IMAGE)
+                    .sorted(Comparator.comparing(TrainerMedia::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
+                    .toList();
+            if (!imageMedia.isEmpty()) {
+                fullImageMediaMap.put(scored.trainer.getId(), imageMedia);
             }
         }
 
@@ -150,9 +160,11 @@ public class FeedServiceImpl implements FeedService {
         // Convert to feed cards
         Double finalUserLat = userLat;
         Double finalUserLng = userLng;
+        Map<String, List<TrainerMedia>> finalFullImageMediaMap = fullImageMediaMap;
         List<TrainerFeedCard> feedCards = pageVideos.stream()
                 .map(stv -> convertToFeedCard(stv.trainer, stv.score,
                         stv.media != null ? List.of(stv.media) : List.of(),
+                        finalFullImageMediaMap.getOrDefault(stv.trainer.getId(), List.of()),
                         finalUserLat, finalUserLng))
                 .toList();
 
@@ -293,6 +305,7 @@ public class FeedServiceImpl implements FeedService {
     }
 
     private TrainerFeedCard convertToFeedCard(Trainer trainer, int matchScore, List<TrainerMedia> media,
+                                              List<TrainerMedia> allImageMedia,
                                               Double userLat, Double userLng) {
         // Get primary contact
         TrainerFeedCard.ContactInfo primaryContact = null;
@@ -360,13 +373,19 @@ public class FeedServiceImpl implements FeedService {
             distance = DistanceCalculator.calculateDistance(userLat, userLng, trainer.getLatitude(), trainer.getLongitude());
         }
 
-        // Collect gallery image URLs
-        List<String> galleryUrls = trainer.getGallery() != null
-                ? trainer.getGallery().stream()
+        // Collect gallery: TrainerMedia images (newest first) + entity gallery images
+        Set<String> seenUrls = new LinkedHashSet<>();
+        allImageMedia.stream()
+                .map(TrainerMedia::getMediaUrl)
+                .filter(url -> url != null && !url.isBlank())
+                .forEach(seenUrls::add);
+        if (trainer.getGallery() != null) {
+            trainer.getGallery().stream()
                     .map(Trainer.TrainerImage::getUrl)
                     .filter(url -> url != null && !url.isBlank())
-                    .toList()
-                : List.of();
+                    .forEach(seenUrls::add);
+        }
+        List<String> galleryUrls = new ArrayList<>(seenUrls);
 
         return TrainerFeedCard.builder()
                 .id(trainer.getId())
